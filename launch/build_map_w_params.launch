@@ -1,0 +1,8 @@
+<launch>
+
+  <node pkg="slam_karto_sesync" type="slam_karto_sesync" name="slam_karto_sesync" output="screen">
+    <remap from="scan" to="base_scan" />
+    <rosparam command="load" file="$(find slam_karto_sesync)/config/mapper_params.yaml" />
+  </node>
+
+</launch>

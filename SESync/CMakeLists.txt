@@ -27,14 +27,16 @@ message(STATUS "Turning on code profiling for SE-Sync")
 endif()
 
 # Add the .cmake files that ship with Eigen3 to the CMake module path (useful for finding other stuff)
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/eigen/cmake" CACHE STRING "The CMake module path used for this project")
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/eigen/cmake" CACHE STRING "The CMake module path used for this project")
 
 
 # SESYNC DEPENDENCIES
 
 # FIND EIGEN3
-set( ENV{EIGEN3_ROOT_DIR} ${CMAKE_SOURCE_DIR}/eigen)
+set( ENV{EIGEN3_ROOT_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/eigen)
 find_package(Eigen3 3.3 REQUIRED)
+# find_package(Eigen3 REQUIRED)
+
 if(EIGEN3_FOUND)
 message(STATUS "Found Eigen3 library (version ${EIGEN3_VERSION_STRING})")
 message(STATUS "Eigen3 include directory: ${EIGEN3_INCLUDE_DIR}\n")
@@ -59,7 +61,7 @@ find_package(BLAS REQUIRED)
 
 # FIND SPECTRA
 # Spectra doesn't ship with a .cmake file, but it's header-only, so it suffices to simply determine it's top-level directory
-set(SPECTRA_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/spectra/include CACHE PATH "Path to top-level directory of Spectra template library")
+set(SPECTRA_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/spectra/include CACHE PATH "Path to top-level directory of Spectra template library")
 
 
 # IMPORT ROPTLIB library
@@ -67,7 +69,7 @@ add_subdirectory(ROPTLIB)
 
 set(SESync_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/SE-Sync/include)
 set(SESync_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/SE-Sync/src)
-set(SESync_EXAMPLES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
+# set(SESync_EXAMPLES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
 
 # Expose the include directories for this project
 set(SESYNC_INCLUDES ${SESync_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR} ${SPQR_INCLUDES} ${CHOLMOD_INCLUDES} ${SPECTRA_INCLUDE_DIR}  ${ROPTLIB_INCLUDE_DIRECTORIES} CACHE INTERNAL "")
@@ -110,12 +112,12 @@ endif()
 
 
 # Build the example executable
-add_executable(se-sync ${SESync_EXAMPLES_DIR}/main.cpp)
-target_include_directories(se-sync PUBLIC ${SESYNC_INCLUDES})
-target_link_libraries(se-sync SESync ${BLAS_LIBRARIES} ${CHOLMOD_LIBRARIES} ${SPQR_LIBRARIES} ${M} ${LAPACK})
-if(${CODE_PROFILING})
-set_target_properties(se-sync PROPERTIES COMPILE_FLAGS "-pg -g" LINK_FLAGS "-pg -g")
-endif()
+# add_executable(se-sync ${SESync_EXAMPLES_DIR}/main.cpp)
+# target_include_directories(se-sync PUBLIC ${SESYNC_INCLUDES})
+# target_link_libraries(se-sync SESync ${BLAS_LIBRARIES} ${CHOLMOD_LIBRARIES} ${SPQR_LIBRARIES} ${M} ${LAPACK})
+# if(${CODE_PROFILING})
+# set_target_properties(se-sync PROPERTIES COMPILE_FLAGS "-pg -g" LINK_FLAGS "-pg -g")
+# endif()
 
 # Uncomment these lines to enable support for OpenMP
 #if(OPENMP_FOUND)
