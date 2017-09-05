@@ -72,6 +72,8 @@ public:
 
     SESyncOptimizer optimizer_;
 
+    std::vector<Eigen::Vector2d> graphNodes_;
+
 };
 
 #endif // KARTO_SESYNCSOLVER_H

@@ -5,7 +5,8 @@
 *
 *********************************************************************/
 
-#include <eigen>
+#include <Eigen/Dense>
+#include <Eigen/Sparse>
 #include "SESync.h"
 
 using namespace SESync;
@@ -37,9 +38,9 @@ public:
      * @param sourceNode source node of edge
      * @param targetNode target node of edge
      * @param z relative pose measurement
-     * @param info information matrix of the relative pose estimate
+     * @param cov covariance matrix of the relative pose estimate
      */
-    void addRelativePoseMeasurement(const int sourceNode, const int targetNode, const Eigen::Vector3d z, const Eigen::Matrix<double,3,3> info);
+    void addRelativePoseMeasurement(const int sourceNode, const int targetNode, const Eigen::Vector3d z, const Eigen::Matrix<double,3,3> cov);
 
     /**
      * @brief Solve the optimization problem
@@ -55,8 +56,17 @@ public:
 
 private:
 
+    /**
+     * @brief Convert rotation matrix to yaw
+     * @details convert a 2x2 rotation matrix to yaw angle value
+     * 
+     * @param R Rotation matrix
+     * @return yaw value
+     */
+    double rotMat2Yaw(Eigen::MatrixXd R);
+
 	std::vector<SESync::RelativePoseMeasurement> measurements_; //vector of relative pose measurements
 
 	std::vector<Eigen::Vector3d> estimate_;// the estimated robot pose
 
-}
+};

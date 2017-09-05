@@ -34,22 +34,28 @@ const karto::ScanSolver::IdPoseVector& SESyncSolver::GetCorrections() const
 void SESyncSolver::Compute()
 {
   corrections_.clear();
+
+  graphNodes_.clear();
+
+  ROS_WARN("[sesync] Solving for loop closure.");
   
   // Do the graph optimization
   optimizer_.solve();
 
-  std::vector<Eigen::Vector2d> poses;
+  std::vector<Eigen::Vector3d> poses;
 
   optimizer_.getPoses(poses);
    
   for (int i = 0; i < poses.size(); i++)
   {
     
-    Eigen::Vector2d v = poses[i];
+    Eigen::Vector3d v = poses[i];
 
     karto::Pose2 p(v(0),v(1),v(2));
     
     corrections_.push_back(std::make_pair(i, p));   
+
+    graphNodes_.push_back(Eigen::Vector2d(v(0), v(1)));
 
   }
 }
@@ -57,6 +63,10 @@ void SESyncSolver::Compute()
 void SESyncSolver::AddNode(karto::Vertex<karto::LocalizedRangeScan>* pVertex)
 {
 
+  karto::Pose2 odom = pVertex->GetObject()->GetCorrectedPose();
+
+  graphNodes_.push_back(Eigen::Vector2d(odom.GetX(), odom.GetY()));
+  
 }
 
 void SESyncSolver::AddConstraint(karto::Edge<karto::LocalizedRangeScan>* pEdge)
@@ -76,51 +86,44 @@ void SESyncSolver::AddConstraint(karto::Edge<karto::LocalizedRangeScan>* pEdge)
   Eigen::Vector3d z(diff.GetX(), diff.GetY(), diff.GetHeading());
     
   // Set the covariance of the measurement
-  karto::Matrix3 precisionMatrix = pLinkInfo->GetCovariance().Inverse();
+  karto::Matrix3 covMatrix = pLinkInfo->GetCovariance();
   
-  Eigen::Matrix<double,3,3> info;
+  Eigen::Matrix<double,3,3> cov;
   
-  info(0,0) = precisionMatrix(0,0);
+  cov(0,0) = covMatrix(0,0);
   
-  info(0,1) = info(1,0) = precisionMatrix(0,1);
+  cov(0,1) = cov(1,0) = covMatrix(0,1);
   
-  info(0,2) = info(2,0) = precisionMatrix(0,2);
+  cov(0,2) = cov(2,0) = covMatrix(0,2);
   
-  info(1,1) = precisionMatrix(1,1);
+  cov(1,1) = covMatrix(1,1);
   
-  info(1,2) = info(2,1) = precisionMatrix(1,2);
+  cov(1,2) = cov(2,1) = covMatrix(1,2);
   
-  info(2,2) = precisionMatrix(2,2);
+  cov(2,2) = covMatrix(2,2);
   
   // Add the constraint to the optimizer
-  ROS_DEBUG("[sesync] Adding Edge from node %d to node %d.", sourceID, targetID);
+  ROS_WARN("[sesync] Adding Edge from node %d to node %d.", sourceID, targetID);
   
-  optimizer_.addEdge(sourceID, targetID, z, info);
+  optimizer_.addRelativePoseMeasurement(sourceID, targetID, z, cov);
 
 }
 
 void SESyncSolver::getGraph(std::vector<Eigen::Vector2d> &nodes, std::vector<std::pair<Eigen::Vector2d, Eigen::Vector2d> > &edges)
 {
-  using namespace g2o;
 
-  //HyperGraph::VertexIDMap vertexMap = optimizer_.vertices();
+  nodes = graphNodes_;
 
-  //HyperGraph::EdgeSet edgeSet = optimizer_.edges();
-
-  std::vector<Eigen::Vector2d> poses;
-
-  optimizer_.getPoses(poses);
-
-   for (int i = 0; i < poses.size(); i++)
-  {
+  //  for (int i = 0; i < poses.size(); i++)
+  // {
     
-    Eigen::Vector2d v = poses[i];
+  //   Eigen::Vector2d v = poses[i];
 
-    Eigen::Vector2d p(v(0), v(1));
+  //   Eigen::Vector2d p(v(0), v(1));
 
-    nodes.push_back(p);
+  //   nodes.push_back(p);
     
-  }
+  // }
 
   // double *data1 = new double[3];
 

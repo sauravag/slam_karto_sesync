@@ -5,10 +5,10 @@
 *
 *********************************************************************/
 
-#include "SESyncOptimizer"
+#include "SESyncOptimizer.h"
 
 
-void SESyncOptimizer::addRelativePoseMeasurement(const int sourceNode, const int targetNode, const Eigen::Vector3d z, const Eigen::Matrix<double,3,3> info)
+void SESyncOptimizer::addRelativePoseMeasurement(const int sourceNode, const int targetNode, const Eigen::Vector3d z, const Eigen::Matrix<double,3,3> cov)
 {
 	
 	using namespace SESync;
@@ -26,15 +26,14 @@ void SESyncOptimizer::addRelativePoseMeasurement(const int sourceNode, const int
 
 	Eigen::Matrix2d tranCov;
 
-	tranCov<< info(1,1),info(1,2), info(1,2), info(2,2);
+	tranCov<< cov(0, 0), cov(0,1), cov(0,1), cov(1,1);
 
-	z_sesync.tau = 2 / tranCov.inverse().trace();
+	z_sesync.tau = 2 / tranCov.trace();
 	
-	z_sync.kappa = info(3,3);
+	z_sesync.kappa = 1.0 / cov(2,2);
 
 	// add to storage
 	measurements_.push_back(z_sesync);
-
 	
 }
 
@@ -43,25 +42,48 @@ void SESyncOptimizer::solve()
 
 	using namespace SESync;
 
+	estimate_.clear();
+
 	// setup optimization params
 	SESyncOpts opts;
 
+	opts.verbose = true; 
+
 	// solve problem
-	SESyncResult result = SESync::SESync(measurements_, opts);
+	SESyncResult results = SESync::SESync(measurements_, opts);
 
 	// move data from results into estimate_ container
 	Eigen::MatrixXd rotations = results.Rhat;
 
 	Eigen::MatrixXd translations = results.that;
 
-	std::cout<<"SESyncOptimizer: Rotations = "<<rotations<<std::endl;
+	int numPoses = translations.cols();
 
-	std::cout<<"SESyncOptimizer: Translations = "<<translations<<std::endl;
+	for(int i = 0; i < numPoses; i++)
+	{
+		double x = translations(0,i);
 
+		double y = translations(1,i);
+
+		double heading = rotMat2Yaw(rotations.block(0,2*i,2,2));
+
+		Eigen::Vector3d p(x,y,heading);
+
+		estimate_.push_back(p);
+	}
 
 }
 
 void SESyncOptimizer::getPoses(std::vector<Eigen::Vector3d> &poses)
 {
 	poses = estimate_;
+}
+
+double SESyncOptimizer::rotMat2Yaw(Eigen::MatrixXd R)
+{
+	double c = R(0,0);
+	
+	double s = R(1,0);
+
+	return atan2(s,c);
 }
