@@ -24,7 +24,7 @@ public:
 	/**
 	 * @brief Constructor
 	 */
-    SESyncOptimizer(){}
+    SESyncOptimizer();
 
     /**
      * @brief Destructor
