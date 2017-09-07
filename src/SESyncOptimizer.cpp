@@ -40,6 +40,7 @@ void SESyncOptimizer::addRelativePoseMeasurement(const int sourceNode, const int
 	std::cout<<" tau = " << 2.0 / tranCov.trace() <<"  kapp = "<< 1.0 / cov(2,2) <<std::endl;
 
 	std::cout<<" t = "<<z_sesync.t << "  R = "<<z_sesync.R<<std::endl;
+
 	// add to storage
 	measurements_.push_back(z_sesync);
 	
@@ -74,8 +75,6 @@ void SESyncOptimizer::solve()
 		double y = translations(1,i);
 
 		Eigen::MatrixXd Rmat = rotations.block(0,2*i,2,2);
-
-		std::cout<<"Rmat = " << Rmat <<std::endl;
 
 		double heading = rotMat2Yaw(Rmat);
 
