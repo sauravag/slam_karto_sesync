@@ -31,12 +31,15 @@ void SESyncOptimizer::addRelativePoseMeasurement(const int sourceNode, const int
 
 	Eigen::Matrix2d tranCov;
 
-	tranCov<< cov(0, 0), cov(0,1), cov(0,1), cov(1,1);
+	tranCov << cov(0, 0), cov(0,1), cov(0,1), cov(1,1);
 
 	z_sesync.tau = 2.0 / tranCov.trace();
 	
-	z_sesync.kappa = cov(2,2);
+	z_sesync.kappa = 1.0 / cov(2,2);
 
+	std::cout<<" tau = " << 2.0 / tranCov.trace() <<"  kapp = "<< 1.0 / cov(2,2) <<std::endl;
+
+	std::cout<<" t = "<<z_sesync.t << "  R = "<<z_sesync.R<<std::endl;
 	// add to storage
 	measurements_.push_back(z_sesync);
 	
