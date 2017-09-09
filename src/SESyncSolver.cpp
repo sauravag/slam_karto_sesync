@@ -9,15 +9,47 @@
 #include "SESyncSolver.h"
 #include <open_karto/Karto.h>
 #include <ros/console.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
 
-
-SESyncSolver::SESyncSolver()
+SESyncSolver::SESyncSolver(bool debug)
 {
+  using namespace std;
+
+  debug_ = debug;
+
+  if(debug_)
+  {
+    const char *homedir;
+
+    if ((homedir = getenv("HOME")) == NULL) 
+    {
+      homedir = getpwuid(getuid())->pw_dir;
+    }
+
+    string fname = "/slam_karto_data.g2o";
+
+    string path = homedir + fname;
+
+    graphFileOutput_.open(path);
+
+    graphFileOutput_.precision(numeric_limits<double>::digits10 + 1);
+  }
 
 }
 
 SESyncSolver::~SESyncSolver()
 {
+
+  if(debug_)
+  {
+    graphFileOutput_ << vertexListStream_.str();
+
+    graphFileOutput_ << edgeListStream_.str();
+
+    graphFileOutput_.close();
+  }
 
 }
 
@@ -38,6 +70,15 @@ void SESyncSolver::Compute()
   graphNodes_.clear();
 
   ROS_WARN("[sesync] Solving for loop closure.");
+
+  if(debug_)
+  {
+    graphFileOutput_ << vertexListStream_.str();
+
+    graphFileOutput_ << edgeListStream_.str();
+
+    graphFileOutput_.close();
+  }
   
   // Do the graph optimization
   optimizer_.solve();
@@ -66,6 +107,11 @@ void SESyncSolver::AddNode(karto::Vertex<karto::LocalizedRangeScan>* pVertex)
   karto::Pose2 odom = pVertex->GetObject()->GetCorrectedPose();
 
   graphNodes_.push_back(Eigen::Vector2d(odom.GetX(), odom.GetY()));
+
+  if(debug_)
+  {
+    vertexListStream_<<"VERTEX_SE2 "<<pVertex->GetObject()->GetUniqueId()<<" "<< odom.GetX() << " "<< odom.GetY() << " " << odom.GetHeading() << "\n"; 
+  }
   
 }
 
@@ -86,26 +132,34 @@ void SESyncSolver::AddConstraint(karto::Edge<karto::LocalizedRangeScan>* pEdge)
   Eigen::Vector3d z(diff.GetX(), diff.GetY(), diff.GetHeading());
     
   // Set the covariance of the measurement
-  karto::Matrix3 covMatrix = pLinkInfo->GetCovariance();
+  karto::Matrix3 precisionMatrix = pLinkInfo->GetCovariance().Inverse();
   
-  Eigen::Matrix<double,3,3> cov;
+  Eigen::Matrix<double,3,3> inf;
   
-  cov(0,0) = covMatrix(0,0);
+  inf(0,0) = precisionMatrix(0,0);
   
-  cov(0,1) = cov(1,0) = covMatrix(0,1);
+  inf(0,1) = inf(1,0) = precisionMatrix(0,1);
   
-  cov(0,2) = cov(2,0) = covMatrix(0,2);
+  inf(0,2) = inf(2,0) = precisionMatrix(0,2);
   
-  cov(1,1) = covMatrix(1,1);
+  inf(1,1) = precisionMatrix(1,1);
   
-  cov(1,2) = cov(2,1) = covMatrix(1,2);
+  inf(1,2) = inf(2,1) = precisionMatrix(1,2);
   
-  cov(2,2) = covMatrix(2,2);
+  inf(2,2) = precisionMatrix(2,2);
   
   // Add the constraint to the optimizer
   ROS_WARN("[sesync] Adding Edge from node %d to node %d.", sourceID, targetID);
   
-  optimizer_.addRelativePoseMeasurement(sourceID, targetID, z, cov);
+  optimizer_.addRelativePoseMeasurement(sourceID, targetID, z, inf);
+
+  if(debug_)
+  {
+
+    edgeListStream_<<"EDGE_SE2 "<< sourceID <<" "<< targetID <<" "<< diff.GetX() <<" "<< diff.GetY() << " " << diff.GetHeading() << " " 
+                                << precisionMatrix(0,0) << " " << precisionMatrix(0,1) << " " << precisionMatrix(0,2) << " "
+                                << precisionMatrix(1,1) << " " << precisionMatrix(1,2) << " " << precisionMatrix(2,2) << "\n";
+  }
 
 }
 

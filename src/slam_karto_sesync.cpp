@@ -285,7 +285,7 @@ SlamKarto::SlamKarto() :
     mapper_->setParamUseResponseExpansion(use_response_expansion);
 
   // Set solver to be used in loop closure
-  solver_ = new SESyncSolver();
+  solver_ = new SESyncSolver(true);
 
   mapper_->SetScanSolver(solver_);
 }

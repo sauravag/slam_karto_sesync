@@ -24,7 +24,10 @@ public:
 	/**
 	 * @brief Constructor
 	 */
-    SESyncOptimizer(){}
+    SESyncOptimizer()
+    {
+        measurements_.clear();
+    }
 
     /**
      * @brief Destructor
@@ -40,7 +43,7 @@ public:
      * @param z relative pose measurement
      * @param cov covariance matrix of the relative pose estimate
      */
-    void addRelativePoseMeasurement(const int sourceNode, const int targetNode, const Eigen::Vector3d z, const Eigen::Matrix<double,3,3> cov);
+    void addRelativePoseMeasurement(const int sourceNode, const int targetNode, const Eigen::Vector3d z, const Eigen::Matrix<double,3,3> inf);
 
     /**
      * @brief Solve the optimization problem

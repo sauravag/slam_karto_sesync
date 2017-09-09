@@ -8,6 +8,9 @@
 #ifndef KARTO_SESYNCSOLVER_H
 #define KARTO_SESYNCSOLVER_H
 
+#include <fstream>
+#include <string>
+#include <sstream>
 #include <open_karto/Mapper.h>
 #include "SESyncOptimizer.h"
 
@@ -19,7 +22,7 @@ class SESyncSolver : public karto::ScanSolver
 
 public:
 
-    SESyncSolver();
+    SESyncSolver(bool debug = false);
     
     virtual ~SESyncSolver();
     
@@ -73,6 +76,14 @@ public:
     SESyncOptimizer optimizer_;
 
     std::vector<Eigen::Vector2d> graphNodes_;
+
+    bool debug_;
+
+    std::ofstream graphFileOutput_; 
+
+    std::stringstream vertexListStream_;
+
+    std::stringstream edgeListStream_;
 
 };
 
