@@ -18,7 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/SESync)
 
-find_package(Eigen3 REQUIRED)
+find_package(Eigen3 3.3 REQUIRED)
 
 include_directories(
     include/${PROJECT_NAME}

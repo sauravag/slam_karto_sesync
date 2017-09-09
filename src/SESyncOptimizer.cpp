@@ -7,6 +7,11 @@
 
 #include "SESyncOptimizer.h"
 
+SESyncOptimizer::SESyncOptimizer()
+{
+	measurements_.clear();
+
+}
 
 void SESyncOptimizer::addRelativePoseMeasurement(const int sourceNode, const int targetNode, const Eigen::Vector3d z, const Eigen::Matrix<double,3,3> inf)
 {
@@ -31,6 +36,10 @@ void SESyncOptimizer::addRelativePoseMeasurement(const int sourceNode, const int
 	z_sesync.tau = 2 / tranCov.inverse().trace();
 	
 	z_sesync.kappa = inf(2,2);
+
+	std::cout<<" tau = " << 2.0 / tranCov.trace() <<"  kapp = "<< 1.0 / cov(2,2) <<std::endl;
+
+	std::cout<<" t = "<<z_sesync.t << "  R = "<<z_sesync.R<<std::endl;
 
 	// add to storage
 	measurements_.push_back(z_sesync);
@@ -65,7 +74,9 @@ void SESyncOptimizer::solve()
 
 		double y = translations(1,i);
 
-		double heading = rotMat2Yaw(rotations.block(0,2*i,2,2));
+		Eigen::MatrixXd Rmat = rotations.block(0,2*i,2,2);
+
+		double heading = rotMat2Yaw(Rmat);
 
 		Eigen::Vector3d p(x,y,heading);
 
