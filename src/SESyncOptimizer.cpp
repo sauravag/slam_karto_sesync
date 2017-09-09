@@ -37,7 +37,7 @@ void SESyncOptimizer::addRelativePoseMeasurement(const int sourceNode, const int
 	
 	z_sesync.kappa = inf(2,2);
 
-	std::cout<<" tau = " << 2.0 / tranCov.trace() <<"  kapp = "<< 1.0 / cov(2,2) <<std::endl;
+	std::cout<<" tau = " << 2.0 / tranCov.trace() <<"  kapp = "<< inf(2,2) <<std::endl;
 
 	std::cout<<" t = "<<z_sesync.t << "  R = "<<z_sesync.R<<std::endl;
 

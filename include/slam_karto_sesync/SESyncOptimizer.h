@@ -24,11 +24,7 @@ public:
 	/**
 	 * @brief Constructor
 	 */
-    SESyncOptimizer()
-    {
-        measurements_.clear();
-    }
-
+    SESyncOptimizer();
     /**
      * @brief Destructor
      */
